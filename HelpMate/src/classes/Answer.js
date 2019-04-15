@@ -2,6 +2,7 @@
 
 class Answer{
     constructor(content, author, creation_date, correct, comments, no_comments, approved){
+        Object.preventExtensions(this);             // Avoid adding new attributes to class.
         this.content = content;                     // [String] Text containing the answer.
         this.author = author;                       // [String] Author of the question.
         this.creation_date = creation_date;         // [Date] Timestamp of the creation date.
