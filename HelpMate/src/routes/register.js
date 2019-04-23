@@ -26,15 +26,12 @@ router.post('/professor', async (req, res) =>{
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
 
-    const professor = await users_db.find({ selector: { username: { "$eq" : req.body.username } } } );
-    if(professor) return res.status(404).send('username already exists.');
+    query_response = await users_db.find({ selector: { email: {"$eq" : req.body.email } } } );
+    if(query_response.docs[0]) return res.status(404).send('email already in use');
 
-    professor = await users_db.find({ selector: { email: req.body.email } });
-    if(professor) return res.status(404).send('email already in use');
-
-    professor = new Professor(req.body.username, req.body.email, req.body.password, req.body.first_name, 
+    professor = new Professor(req.body.email, req.body.password, req.body.first_name, 
                                     req.body.middle_name, req.body.last_name, req.body.age, req.body.gender, req.body.department);
-    
+                                    
     await users_db.insert(professor);
     return res.status(201).redirect('/');
 })

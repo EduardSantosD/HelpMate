@@ -14,6 +14,7 @@ const path = require('path');
 // Express router imports
 const root_router = require('./routes/root');
 const register_router = require('./routes/register');
+const api_router = require('./routes/usersAPI');
 
 // Cloudant configuration
 // const Cloudant = require('@cloudant/cloudant');
@@ -43,6 +44,7 @@ app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/', root_router);
 app.use('/register', register_router);
+app.use('/api', api_router);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Escuchando en puerto ${port}...`));

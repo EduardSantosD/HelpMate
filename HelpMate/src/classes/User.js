@@ -1,8 +1,7 @@
 'use strict'
 
 class User{
-    constructor(username, email, password, first_name, middle_name, last_name, age, gender){
-        this.username = username;                   // [String] Username of the user.
+    constructor(email, password, first_name, middle_name, last_name, age, gender){
         this.email = email;                         // [String] Email of the user.
         this.password = password;                   // [String] Hashed password of the user.
         this.first_name = first_name;                // [String] Name of the use. 

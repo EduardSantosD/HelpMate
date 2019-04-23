@@ -12,8 +12,6 @@ function RegisterForm(props){
                 <h3 className='w3-teal w3-center w3-round'>Professor registration form</h3>
                 <form className='w3-container w3-light-grey w3-round' action="/register/professor" method="post">
                     <p>
-                        <label htmlFor="username">Username</label>
-                        <input className='w3-input w3-border w3-round' type="text" name="username" id="username" required/>
                         <label htmlFor="email">Email</label>
                         <input className='w3-input w3-border w3-round' type="email" name="email" id="email" email required/>
                         <label htmlFor="password">Password</label>

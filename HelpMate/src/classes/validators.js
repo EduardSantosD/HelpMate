@@ -52,7 +52,6 @@ function validate_question(question){
 
 function validate_professor(professor) {
     const schema = {
-        username: Joi.string().trim().required(),
         email: Joi.string().email().required(),
         password: Joi.string().trim().required(),
         first_name: Joi.string().trim().required(),
@@ -69,7 +68,6 @@ function validate_professor(professor) {
 
 function validate_student(student){
     const schema = {
-        username: Joi.string().trim().required(),
         email: Joi.string().email().required(),
         password: Joi.string().trim().required(),
         first_name: Joi.string().trim().required(),
@@ -84,6 +82,14 @@ function validate_student(student){
         courses: Joi.array().items(Joi.string().trim())
     }
     return Joi.validate(student, schema, {convert: false});
+}
+
+function validate_login(user){
+    const schema = {
+        email: Joi.string().email().trim().required(),
+        password: Joi.string().trim().required()
+    }
+    return Joi.validate(user, schema, {convert: false});
 }
 
 // // Test Course
@@ -120,3 +126,4 @@ function validate_student(student){
 
 exports.validate_student = validate_student;
 exports.validate_professor = validate_professor;
+exports.validate_login = validate_login;
