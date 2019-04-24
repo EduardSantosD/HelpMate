@@ -127,3 +127,4 @@ function validate_login(user){
 exports.validate_student = validate_student;
 exports.validate_professor = validate_professor;
 exports.validate_login = validate_login;
+exports.validate_course = validate_course;
