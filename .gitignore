@@ -1,3 +1,2 @@
-
-HelpMate/src/node_modules
-HelpMate/src/package-lock.json
+/HelpMate/src/backend/node_modules
+/HelpMate/src/backend/package-lock.json
