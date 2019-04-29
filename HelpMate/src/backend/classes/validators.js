@@ -14,10 +14,11 @@ function validate_course(course){
         id: Joi.string().trim().required(),
         key: Joi.string().trim(),
         tags: Joi.array().items(Joi.string().trim()).required(),
-        term: Joi.string().regex(/spring|fall/).required(),
+        term: Joi.string().regex(/^spring$|^fall$/).required(),
         year: Joi.number().integer().min(new Date().getFullYear()),
         users: Joi.array().items(Joi.string().trim()),
-        admins: Joi.array().items(Joi.string().trim())
+        admins: Joi.array().items(Joi.string().trim()),
+        pending_admins: Joi.array().items(Joi.string().trim())
     }
     return Joi.validate(course, schema, {convert: false});
 }
@@ -95,39 +96,33 @@ function validate_login(user){
     return Joi.validate(user, schema, {convert: false});
 }
 
-// // Test Course
-// const course1 = new Course('Microcontrollers', 'ME2010', ['general', 'hw1', 'hw2', 'lab']);
-// const course2 = new Course('Microprocessors', 3010, ['general', 'hw1', 'hw2', 'lab']);
-// let validation = validate_course(course1); 
-// if (validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
-// validation = validate_course(course2);
-// if (validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
+function validate_enroll(course){
+    const schema = {
+        name: Joi.string().trim().required(),
+        id: Joi.string().trim().required(),
+        key: Joi.string().trim().required(),
+        term: Joi.string().regex(/spring|fall/).required(),
+        year: Joi.number().integer().min(new Date().getFullYear()).required()
+        // admins: Joi.array().items(Joi.string().trim().required(), Joi.string().trim().required())
+    }
+    return Joi.validate(course, schema);
+}
 
-// // Test Answer
-// const a1 = new Answer('It should be log(n), not n*log(n)', 'eduardo');
-// const a2 = new Answer('It should be log(n), not n*log(n)', 12);
-// validation = validate_answer(a1);
-// if (validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
-// validation = validate_answer(a2);
-// if (validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
-
-// // Test Questions
-// const q1 = new Question(1, '¿Pueden ver esta pregunta?', 'alex', ['hw1']);
-// const q2 = new Question('Test', '¿Pueden ver esta pregunta?', 'alex', ['hw1']);
-// validation = validate_question(q1);
-// if(validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
-// validation = validate_question(q2);
-// if (validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
-
-// // Professor-Student testing
-// const alex_student = new Student('haenrqz', 'ha.enrqz@gmail.com', 123, 'Hector', 'Alejandro', 'Enriquez', 22, 'male', 'isdr', 8);
-// const alex_professor = new Professor('haenrqz_p', 'ha.enrqz@gmail.com', '123', 'Hector', 'Alejandro', 'Enriquez', '22', 'male', 'engineering');
-// validation = validate_student(alex_student);
-// if (validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
-// validation = validate_professor(alex_professor);
-// if (validation.error) console.log('Joi error at', validation.error.details[0].context, ' : ', validation.error.details[0].message, '\r\n');
+function validate_pending_admin(pending){
+    const schema = {
+        name: Joi.string().trim().required(),
+        id: Joi.string().trim().required(),
+        term: Joi.string().regex(/spring|fall/).required(),
+        year: Joi.number().integer().min(new Date().getFullYear()).required(),
+        email: Joi.string().email().required(),
+        verdict: Joi.boolean().required()
+    }
+    return Joi.validate(pending, schema);
+}
 
 exports.validate_student = validate_student;
 exports.validate_professor = validate_professor;
 exports.validate_login = validate_login;
 exports.validate_course = validate_course;
+exports.validate_enroll = validate_enroll;
+exports.validate_pending_admin = validate_pending_admin;
