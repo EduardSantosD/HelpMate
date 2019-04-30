@@ -18,7 +18,8 @@ function validate_course(course){
         year: Joi.number().integer().min(new Date().getFullYear()),
         users: Joi.array().items(Joi.string().trim()),
         admins: Joi.array().items(Joi.string().trim()),
-        pending_admins: Joi.array().items(Joi.string().trim())
+        pending_admins: Joi.array().items(Joi.string().trim()),
+        questions: Joi.array().items(Joi.string().trim())
     }
     return Joi.validate(course, schema, {convert: false});
 }
@@ -39,8 +40,9 @@ function validate_answer(answer){
 function validate_question(question){
     const schema = {
         title: Joi.string().trim().required(),
-        content: Joi.string().trim().required(),
+        content: Joi.string().required(),
         author: Joi.string().trim().required(),
+        id: Joi.string().trim().required(),
         creation_date: Joi.date().timestamp().required(),
         solved: Joi.boolean().required(),
         answers: Joi.array().items(Joi.string().trim()),
@@ -49,7 +51,7 @@ function validate_question(question){
         no_answers: Joi.boolean().required().required(),
         views: Joi.number().min(0).required(),
         approved: Joi.number().min(0).required(),
-        course_id: Joi.string().trim()
+        course: Joi.string().trim()
     }
     return Joi.validate(question, schema, {convert: false});
 }
@@ -110,10 +112,6 @@ function validate_enroll(course){
 
 function validate_pending_admin(pending){
     const schema = {
-        name: Joi.string().trim().required(),
-        id: Joi.string().trim().required(),
-        term: Joi.string().regex(/spring|fall/).required(),
-        year: Joi.number().integer().min(new Date().getFullYear()).required(),
         email: Joi.string().email().required(),
         verdict: Joi.boolean().required()
     }
@@ -126,3 +124,4 @@ exports.validate_login = validate_login;
 exports.validate_course = validate_course;
 exports.validate_enroll = validate_enroll;
 exports.validate_pending_admin = validate_pending_admin;
+exports.validate_question = validate_question;

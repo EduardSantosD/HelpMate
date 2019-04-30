@@ -1,0 +1,6 @@
+DELETE http://127.0.0.1:3000/api/leave_admin/E3TDhldtqOmFs121 HTTP/1.1
+Content-Type: application/json
+# Professor token
+# x-auth-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI4OGNjNzcwYzJjOGQ0NGMzZjQxM2FiZGUyOWYyYmJlNyIsImlhdCI6MTU1NjU5OTkwNn0.2vhq8qxjxHlzOyhPzA1KcdUNNaR-feTwJ8fmIhcJNFA
+# Student token
+x-auth-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1MGY4ZWZhMDNmOGUyNWVmOWVmOTZmZmIzNTgzMTAzYyIsImlhdCI6MTU1NjU5OTczOX0.Fh9h3m98Gkez2WAK9d0Poa7BoIhstps0-wYqXAzUjNA

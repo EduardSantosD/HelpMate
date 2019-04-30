@@ -5,11 +5,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const Cloudant = require('@cloudant/cloudant');
+const nanoid = require('nanoid');
 
-const { validate_student, validate_professor, validate_login, validate_course, validate_enroll, validate_pending_admin } = require('../classes/validators');
+const { validate_student, validate_professor, validate_login, validate_course,
+        validate_enroll, validate_pending_admin, validate_question } = require('../classes/validators');
 const Student = require('../classes/Student');
 const Professor = require('../classes/Professor');
 const Course = require('../classes/Course');
+const Question = require('../classes/Question');
 const auth = require('../middleware/auth_api');
 
 router.post('/register/professor', async(req, res) =>{
@@ -126,6 +129,15 @@ router.post('/new_course', auth, async(req, res) =>{
     });
     if(query_response.docs[0]) return res.status(400).send('Error: user has already defined a course with the specified name, term and year');
 
+    query_response = await courses_db.find({
+        selector: {
+            key: {"$eq": course.key},
+            admins: { "$elemMatch": { "$eq": user._id } }
+        }
+    });
+    // Avoid key collision
+    if(query_response.docs[0]) course.key = nanoid(16); 
+
     await courses_db.insert(course);
     query_response = await courses_db.find({ selector: { name: { "$eq": course.name }, admins: { "$elemMatch": { "$eq": user._id } } } });
     course = query_response.docs[0];
@@ -143,6 +155,7 @@ router.post('/new_course', auth, async(req, res) =>{
     }]);
 });
 
+// Look up method, can be more complex
 router.get('/enroll/:course', auth, async(req, res) =>{
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
@@ -229,6 +242,42 @@ router.post('/enroll', auth, async(req, res) =>{
                             courses: user.courses});
 });
 
+router.delete('/leave/:course', auth, async(req, res) =>{
+    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
+    const users_db = await cloudant.db.use('users');
+    const courses_db = await cloudant.use('courses');
+
+    var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
+    if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
+    const user = query_response.docs[0];
+
+    query_response = await courses_db.find({
+        selector: {
+            key: req.params.course,
+            users: { "$elemMatch": { "$eq": user._id } }
+        }
+    });
+    if(!query_response.docs[0]) return res.status(400).send('Error: user is not enrolled to the selected course.')
+    const course = query_response.docs[0];
+
+    var index = course.users.indexOf(user._id);
+    course.users.splice(index, 1);
+    await courses_db.insert(course);
+    index = user.courses.indexOf(course._id);
+    user.courses.splice(index, 1);
+    await users_db.insert(user);
+
+    res.status(200).send({
+        message: 'User left the course.',
+        course:{
+            name: course.name,
+            id: course.id,
+            term: course.term,
+            year: course.year
+        }
+    });
+});
+
 router.post('/enroll_admin', auth,  async(req, res) =>{
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
@@ -289,31 +338,35 @@ router.get('/pending_admins', auth, async(req, res) =>{
     for (let i = 0; i < professor.admin_courses.length; i++) {
         query_response = await courses_db.find({
             selector: { _id: { "$eq": professor.admin_courses[i] } },
-            fields: ["name", "id", "term", "year", "pending_admins"]
+            fields: ["name", "id", "key", "term", "year", "pending_admins"]
         });
         const temp_course = query_response.docs[0];
-        list[i] = {
-            name: temp_course.name,
-            id: temp_course.id,
-            term: temp_course.term,
-            year: temp_course.year,
-            pending_admins: []
-        };
-        for (let j = 0; j < temp_course.pending_admins.length; j++) {
-            const pending_user = temp_course.pending_admins[j];
-            const query_response_2 = await users_db.find({
-                selector: { _id: pending_user },
-                fields: ["first_name", "middle_name", "last_name", "email"]
-            });
-            const temp_user = query_response_2.docs[0]
-            list[i].pending_admins.push(temp_user);
-        }
+        if(temp_course.pending_admins.length != 0){
+            var temp_info = {
+                key: temp_course.key,
+                name: temp_course.name,
+                id: temp_course.id,
+                term: temp_course.term,
+                year: temp_course.year,
+                pending_admins: []
+            };
+            for (let j = 0; j < temp_course.pending_admins.length; j++) {
+                const pending_user = temp_course.pending_admins[j];
+                const query_response_2 = await users_db.find({
+                    selector: { _id: pending_user },
+                    fields: ["first_name", "middle_name", "last_name", "email"]
+                });
+                const temp_user = query_response_2.docs[0]
+                temp_info.pending_admins.push(temp_user);
+                list.push(temp_info);
+            }
+        }  
     }
 
     res.status(200).send(list);
 });
 
-router.post('/pending_admins', auth, async(req, res) =>{
+router.post('/pending_admins/:course', auth, async(req, res) =>{
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -329,14 +382,11 @@ router.post('/pending_admins', auth, async(req, res) =>{
 
     query_response = await courses_db.find({
         selector: {
-            name: { "$eq": req.body.name },
-            id: { "$eq": req.body.id },
-            term: { "$eq": req.body.term },
-            year: { "$eq": req.body.year },
+            key: { "$eq": req.params.course },
             admins: { "$elemMatch": { "$eq": professor._id } }
         }
     });
-    if (!query_response.docs[0]) return res.status(400).send('Error: Incorrect course information or it does not exist.');
+    if (!query_response.docs[0]) return res.status(400).send('Error: Course does not exist.');
 
     const course = query_response.docs[0];
 
@@ -357,8 +407,6 @@ router.post('/pending_admins', auth, async(req, res) =>{
 
     // If professor approves request
     if(req.body.verdict){
-        // const pending_index = course.pending_admins.indexOf(new_admin._id);
-        // course.pending_admins.splice(pending_index, 1);
         course.admins.push(new_admin._id);
         await courses_db.insert(course);
         new_admin.admin_courses.push(course._id);
@@ -391,5 +439,198 @@ router.post('/pending_admins', auth, async(req, res) =>{
 
     res.status(200).send(response);
 });
+
+router.delete('/leave_admin/:course', auth, async (req, res) => {
+    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
+    const users_db = await cloudant.db.use('users');
+    const courses_db = await cloudant.use('courses');
+
+    var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
+    if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
+    const user = query_response.docs[0];
+
+    query_response = await courses_db.find({
+        selector: {
+            key: req.params.course,
+            admins: { "$elemMatch": { "$eq": user._id } }
+        }
+    });
+    if (!query_response.docs[0]) return res.status(400).send('Error: user is not administrator of the selected course.')
+    const course = query_response.docs[0];
+
+    var index = course.admins.indexOf(user._id);
+    course.admins.splice(index, 1);
+    await courses_db.insert(course);
+    index = user.admin_courses.indexOf(course._id);
+    user.admin_courses.splice(index, 1);
+    await users_db.insert(user);
+
+    res.status(200).send({
+        message: 'User left administration for the course.',
+        course: {
+            name: course.name,
+            id: course.id,
+            term: course.term,
+            year: course.year
+        }
+    });
+});
+
+router.get('/courses', auth, async (req, res) => {
+    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
+    const users_db = await cloudant.db.use('users');
+    const courses_db = await cloudant.use('courses');
+
+    var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
+    if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
+
+    const user = query_response.docs[0];
+    const admin_courses = new Array();
+
+    for (let i = 0; i < user.admin_courses.length; i++) {
+        query_response = await courses_db.find({
+            selector: {
+                _id: { "$eq": user.admin_courses[i] }
+            },
+            fields: ["name", "id", "key", "term", "year"]
+        });
+        admin_courses.push(query_response.docs[0]);
+    }
+
+    if (user.courses) {
+        const courses = new Array();
+        for (let i = 0; i < user.courses.length; i++) {
+            query_response = await courses_db.find({
+                selector: {
+                    _id: { "$eq": user.courses[i] }
+                },
+                fields: ["name", "id", "key", "term", "year"]
+            });
+            courses.push(query_response.docs[0]);
+        }
+        return res.status(200).send({ admin_courses: admin_courses, courses: courses });
+    }
+
+    res.status(200).send({ admin_courses: admin_courses });
+});
+
+router.get('/courses/:course', auth, async(req, res) =>{
+    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
+    const users_db = await cloudant.db.use('users');
+    const courses_db = await cloudant.use('courses');
+    const questions_db = await cloudant.use('questions');
+
+    var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
+    if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
+
+    const user = query_response.docs[0];
+
+    query_response = await courses_db.find({
+        selector: {
+            key: { "$eq": req.params.course },
+            "$or": [
+                { users: { "$elemMatch": { "$eq": user._id } } },
+                { admins: { "$elemMatch": { "$eq": user._id } } }
+            ]
+        },
+        fields: ["name", "id", "key", "term", "year", "tags", "questions"]
+    });
+    if(!query_response.docs[0]) return res.status(400).send('Error: user is not enrolled in the selected course.');
+    const course = query_response.docs[0];
+
+    const questions = new Array();
+    for (let i = 0; i < course.questions.length; i++) {
+        query_response = await questions_db.find({
+            selector: {
+                _id: course.questions[i]
+            }
+        });
+        const question = query_response.docs[0];
+        query_response = await users_db.find({
+            selector: {
+                _id: question.author
+            }
+        });
+        const user = query_response.docs[0];
+        questions.push({
+            title: question.title,
+            content: question.content,
+            author: user.first_name + ' ' + user.last_name,
+            id: question.id,
+            creation_date: question.creation_date,
+            solved: question.solved,
+            tags: question.tags,
+            no_answers: question.no_answers,
+            views: question.views
+        });
+    }
+    
+    course.questions = questions;
+    res.status(200).send(course);
+});
+
+// Missing anonymous posting
+router.post('/course/:course/new_question', auth, async(req, res) =>{
+    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
+    const users_db = await cloudant.db.use('users');
+    const courses_db = await cloudant.use('courses');
+    const questions_db = await cloudant.use('questions');
+
+    var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
+    if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
+
+    const user = query_response.docs[0];
+    if(!user.semester) return res.status(401).send('Error: user is not allowed to post questions.');
+
+    query_response = await courses_db.find({
+        selector: {
+            key: { "$eq": req.params.course },
+            users: { "$elemMatch": { "$eq": user._id } }
+        }
+    });
+    if(!query_response.docs[0]) return res.status(400).send('Error: user is not registered in the indicated course');
+
+    const course = query_response.docs[0];
+    
+    var question = new Question(req.body.title, req.body.content, user._id, req.body.tags, course._id);
+    
+    const { error } = validate_question(question);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    for (let i = 0; i < question.tags.length; i++) {
+        if (!course.tags.includes(question.tags[i])) return res.status(400).send('Error: tag \'' + question.tags[i] + '\' is not a valid tag for the course.')
+        
+    }
+
+    await questions_db.insert(question);
+    query_response = await questions_db.find({
+        selector: {
+            title: {"$eq": question.title},
+            content: { "$eq": question.content },
+            author: { "$eq": question.author }
+        }
+    });
+    question = query_response.docs[0];
+
+    course.questions.push(question._id);
+    await courses_db.insert(course);
+
+    res.status(200).send({
+        id: question.id,
+        title: question.title,
+        content: question.content,
+        author: user.first_name + ' ' + user.last_name,
+        tags: question.tags,
+        creation_date: question.creation_date,
+        course: {
+            name: course.name,
+            id: course.id,
+            term: course.term,
+            year: course.year
+        }
+    })
+});
+
+
 
 module.exports = router;
