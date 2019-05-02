@@ -1,109 +1,16 @@
 require('dotenv').config({ path: '../.env' })
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const Joi = require('joi');
 const Cloudant = require('@cloudant/cloudant');
 const nanoid = require('nanoid');
 
-const { validate_student, validate_professor, validate_login, validate_course,
-        validate_enroll, validate_pending_admin, validate_question, validate_answers } = require('../classes/validators');
-const Student = require('../classes/Student');
-const Professor = require('../classes/Professor');
+const { validate_course, validate_enroll, validate_pending_admin, validate_question} = require('../classes/validators');
 const Course = require('../classes/Course');
 const Question = require('../classes/Question');
 const auth = require('../middleware/auth_api');
 const sleep = require('../helpers/sleep');
 
-router.post('/register/professor', async(req, res) =>{
-    if ('0'.localeCompare(req.body.gender)) req.body.gender = 'male';
-    else if ('1'.localeCompare(req.body.gender)) req.body.gender = 'female';
-    else req.body.gender = 'other';
-    req.body.age = parseInt(req.body.age)
-
-    const { error } = validate_professor(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
-    const users_db = await cloudant.db.use('users');
-
-    query_response = await users_db.find({ selector: { email: { "$eq": req.body.email } } });
-    if (query_response.docs[0]) return res.status(404).send('Error: email already in use');
-
-    const professor = new Professor(req.body.email, req.body.password, req.body.first_name,
-        req.body.middle_name, req.body.last_name, req.body.age, req.body.gender, req.body.department);
-
-    const salt = await bcrypt.genSalt(10);
-    professor.password = await bcrypt.hash(professor.password, salt);
-
-    await users_db.insert(professor);
-    return res.status(201).send({
-        email: professor.email,
-        first_name: professor.first_name,
-        middle_name: professor.middle_name,
-        last_name: professor.last_name,
-        age: professor.age,
-        gender: professor.gender,
-        department: professor.department
-    });
-});
-
-router.post('/register/student', async(req, res) =>{
-    if ('0'.localeCompare(req.body.gender)) req.body.gender = 'male';
-    else if ('1'.localeCompare(req.body.gender)) req.body.gender = 'female';
-    else req.body.gender = 'other';
-    req.body.age = parseInt(req.body.age);
-    req.body.semester = parseInt(req.body.semester);
-
-    const { error } = validate_student(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
-    const users_db = await cloudant.db.use('users');
-
-    const query_response = await users_db.find({ selector: { email: { "$eq": req.body.email } } });
-    if (query_response.docs[0]) return res.status(400).send('Error: email already in use');
-
-    const student = new Student(req.body.email, req.body.password, req.body.first_name,
-        req.body.middle_name, req.body.last_name, req.body.age, req.body.gender, req.body.major, req.body.semester);
-
-    const salt = await bcrypt.genSalt(10);
-    student.password = await bcrypt.hash(student.password, salt);
-
-    await users_db.insert(student);
-    return res.status(201).send({
-        email: student.email,
-        first_name: student.first_name,
-        middle_name: student.middle_name,
-        last_name: student.last_name,
-        age: student.age,
-        gender: student.gender,
-        major: student.major,
-        semester: student.semester
-    });
-});
-
-router.post('/login', async(req, res) =>{
-    const { error } = validate_login(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
-
-    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
-    const users_db = await cloudant.db.use('users');
-
-    const query_response = await users_db.find({ selector: { email: { "$eq": req.body.email } } } );
-    if (!query_response.docs[0]) return res.status(404).send('Error: incorrect username or password.');
-
-    const user = query_response.docs[0];
-    const valid = await bcrypt.compare(req.body.password, user.password);
-    if(!valid) return res.status(400).send('Error: incorrect username or password.');
-
-    const token = await jwt.sign({_id: user._id}, process.env.SECRET);
-
-    res.status(200).send( { xauthtoken: token } );
-});
-
-router.get('/courses', auth, async (req, res) => {
+router.get('/', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -142,7 +49,7 @@ router.get('/courses', auth, async (req, res) => {
 });
 
 // Look up method, can be more complex
-router.get('/courses/search/:course', auth, async (req, res) => {
+router.get('/search/:course', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -181,7 +88,7 @@ router.get('/courses/search/:course', auth, async (req, res) => {
     res.status(200).send(courses);
 });
 
-router.get('/courses/pending_admins', auth, async (req, res) => {
+router.get('/pending_admins', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -198,18 +105,18 @@ router.get('/courses/pending_admins', auth, async (req, res) => {
                 "$elemMatch": { "$eq": professor._id }
             },
             "$not": {
-                pending_admins: {"$size": 0}
+                pending_admins: { "$size": 0 }
             }
         },
         fields: ["name", "id", "key", "term", "year", "pending_admins"]
-    }); 
-    if(!query_response.docs[0]) return res.status(200).send([]);
+    });
+    if (!query_response.docs[0]) return res.status(200).send([]);
     var courses = query_response.docs;
     const pending_query = new Array();
     for (let i = 0; i < courses.length; i++) {
         const temp_course = courses[i];
         for (let j = 0; j < temp_course.pending_admins.length; j++) {
-            pending_query.push({ _id: { "$eq": temp_course.pending_admins[j] } }); 
+            pending_query.push({ _id: { "$eq": temp_course.pending_admins[j] } });
         }
     }
 
@@ -219,7 +126,7 @@ router.get('/courses/pending_admins', auth, async (req, res) => {
         }, fields: ["_id", "first_name", "middle_name", "last_name", "email"]
     });
     const pending_users = query_response.docs;
-    
+
     for (let i = 0; i < courses.length; i++) {
         for (let j = 0; j < courses[i].pending_admins.length; j++) {
             var index = pending_users.findIndex(student => student._id === courses[i].pending_admins[j]);
@@ -228,14 +135,14 @@ router.get('/courses/pending_admins', auth, async (req, res) => {
                 middle_name: pending_users[index].middle_name,
                 last_name: pending_users[index].last_name,
                 email: pending_users[index].email
-            }   
+            }
         }
     }
 
     res.status(200).send(courses);
 });
 
-router.get('/courses/:course', auth, async(req, res) =>{
+router.get('/courses/:course', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -256,36 +163,36 @@ router.get('/courses/:course', auth, async(req, res) =>{
         },
         fields: ["_id", "name", "id", "key", "term", "year", "tags", "questions", "instructor"]
     });
-    if(!query_response.docs[0]) return res.status(400).send('Error: user is not enrolled in the selected course.');
-    
+    if (!query_response.docs[0]) return res.status(400).send('Error: user is not enrolled in the selected course.');
+
     const course = query_response.docs[0];
     var page_num = parseInt(req.query.page_num) || 1;
     var page_size = parseInt(req.query.page_size) || 5;
-    if(page_num < 1) page_num = 1;
-    if(page_size < 1) page_size = 1;
-    const skip = (page_num-1)*page_size;
+    if (page_num < 1) page_num = 1;
+    if (page_size < 1) page_size = 1;
+    const skip = (page_num - 1) * page_size;
     var questions_ids = course.questions.reverse().splice(skip, page_size);
     for (let i = 0; i < questions_ids.length; i++) {
         questions_ids[i] = { "_id": { "$eq": questions_ids[i] } }
     }
     query_response = await questions_db.find({
         selector: {
-            course: { "$eq": course._id},
+            course: { "$eq": course._id },
             "$or": questions_ids
         },
         fields: ["id", "title", "content", "creation_date", "solved", "tags", "no_answers", "views", "instructor"],
     });
     var questions = query_response.docs;
-    questions.sort( (a, b)=>{
+    questions.sort((a, b) => {
         return new Date(b.creation_date) - new Date(a.creation_date)
     });
     delete course._id;
     delete course.questions;
-    
+
     res.status(200).send([course, questions]);
 });
 
-router.get('/courses/:course/pending_admins', auth, async (req, res) => {
+router.get('/:course/pending_admins', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -303,11 +210,11 @@ router.get('/courses/:course/pending_admins', auth, async (req, res) => {
         },
         fields: ["key", "name", "id", "term", "year", "pending_admins"]
     });
-    if(!query_response.docs[0]) return res.status(400).send('Error: user is not enrolled in the course.');
+    if (!query_response.docs[0]) return res.status(400).send('Error: user is not enrolled in the course.');
     const course = query_response.docs[0];
     var pending = course.pending_admins;
     for (let i = 0; i < pending.length; i++) {
-        pending[i] = { _id:  { "$eq": pending[i] } };
+        pending[i] = { _id: { "$eq": pending[i] } };
     }
 
     query_response = await users_db.find({
@@ -322,7 +229,7 @@ router.get('/courses/:course/pending_admins', auth, async (req, res) => {
     res.status(200).send([course, pending]);
 });
 
-router.get('/courses/:course/q/:question', auth, async (req, res) => {
+router.get('/:course/q/:question', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -392,7 +299,7 @@ router.get('/courses/:course/q/:question', auth, async (req, res) => {
     res.status(200).send([question, answers])
 });
 
-router.post('/courses/new_course', auth, async (req, res) => {
+router.post('/new_course', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -445,7 +352,7 @@ router.post('/courses/new_course', auth, async (req, res) => {
     }]);
 });
 
-router.post('/courses/enroll', auth, async (req, res) => {
+router.post('/enroll', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -490,7 +397,7 @@ router.post('/courses/enroll', auth, async (req, res) => {
     });
 });
 
-router.post('/courses/enroll_admin', auth, async (req, res) => {
+router.post('/enroll_admin', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -534,7 +441,7 @@ router.post('/courses/enroll_admin', auth, async (req, res) => {
     });
 })
 
-router.post('/courses/:course/pending_admins', auth, async (req, res) => {
+router.post('/:course/pending_admins', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -608,7 +515,7 @@ router.post('/courses/:course/pending_admins', auth, async (req, res) => {
     res.status(200).send(response);
 });
 
-router.post('/courses/:course/new_question', auth, async (req, res) => {
+router.post('/:course/new_question', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -632,7 +539,7 @@ router.post('/courses/:course/new_question', auth, async (req, res) => {
 
     const course = query_response.docs[0];
     var instructor = false;
-    if(course.admins.includes(user._id)) instructor = true;
+    if (course.admins.includes(user._id)) instructor = true;
     var question = new Question(req.body.title, req.body.content, user._id, req.body.anonymous, req.body.tags, course._id, instructor);
 
     const { error } = validate_question(question);
@@ -685,7 +592,7 @@ router.post('/courses/:course/new_question', auth, async (req, res) => {
     })
 });
 
-router.post('/courses/:course/q/:question/good_question', auth, async(req, res) =>{
+router.post('/:course/q/:question/good_question', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -710,31 +617,31 @@ router.post('/courses/:course/q/:question/good_question', auth, async(req, res) 
 
     query_response = await questions_db.find({
         selector: {
-            course: { "$eq": course._id},
-            id: { "$eq": req.params.question}
+            course: { "$eq": course._id },
+            id: { "$eq": req.params.question }
         }
     });
-    if(!query_response.docs[0]) return res.status(400).send('Error: could not find question.')
-    var question = query_response.docs[0];query_response.docs[0];
+    if (!query_response.docs[0]) return res.status(400).send('Error: could not find question.')
+    var question = query_response.docs[0]; query_response.docs[0];
     var message = '';
 
-    if(question.approved_users.includes(user._id)){
+    if (question.approved_users.includes(user._id)) {
         question.approved--;
         var index = question.approved_users.indexOf(user._id);
         question.approved_users.splice(index, 1);
         message = 'User no longer approves this question.';
-    }else{
+    } else {
         question.approved++;
         question.approved_users.push(user._id);
         message = 'User approves this question.';
     }
     sleep(300);
     await questions_db.insert(question);
-    
-    res.status(200).send({message: message, id: question.id, course: course.key, approved: question.approved});
+
+    res.status(200).send({ message: message, id: question.id, course: course.key, approved: question.approved });
 });
 
-router.post('/courses/:course/q/:question/solved', auth, async (req, res) => {
+router.post('/:course/q/:question/solved', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -757,7 +664,7 @@ router.post('/courses/:course/q/:question/solved', auth, async (req, res) => {
     if (!query_response.docs[0]) return res.status(401).send('Error: user is not enrolled in the selected course.');
     const course = query_response.docs[0];
 
-    if(!course.admins.includes(user._id)) return res.status(401).send('Error: user is not authorized to mark a question as being solved.')
+    if (!course.admins.includes(user._id)) return res.status(401).send('Error: user is not authorized to mark a question as being solved.')
 
     query_response = await questions_db.find({
         selector: {
@@ -790,7 +697,7 @@ router.post('/courses/:course/q/:question/solved', auth, async (req, res) => {
     });
 });
 
-router.delete('/courses/:course/leave', auth, async (req, res) => {
+router.delete('/:course/leave', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -826,7 +733,7 @@ router.delete('/courses/:course/leave', auth, async (req, res) => {
     });
 });
 
-router.delete('/courses/:course/leave_admin', auth, async (req, res) => {
+router.delete('/:course/leave_admin', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -862,7 +769,7 @@ router.delete('/courses/:course/leave_admin', auth, async (req, res) => {
     });
 });
 
-router.delete('/courses/:course/q/:question', auth, async(req, res) =>{
+router.delete('/:course/q/:question', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -875,9 +782,9 @@ router.delete('/courses/:course/q/:question', auth, async(req, res) =>{
     query_response = await courses_db.find({
         selector: {
             key: req.params.course,
-            $or:[
+            $or: [
                 { admins: { "$elemMatch": { "$eq": user._id } } },
-                { users: { "$elemMatch": { "$eq": user._id} } }
+                { users: { "$elemMatch": { "$eq": user._id } } }
             ]
         }
     });
@@ -890,14 +797,14 @@ router.delete('/courses/:course/q/:question', auth, async(req, res) =>{
             course: course._id
         }
     });
-    if(!query_response.docs[0]) return res.status(404).send('Error: could not find question for the selected course.')
+    if (!query_response.docs[0]) return res.status(404).send('Error: could not find question for the selected course.')
     const question = query_response.docs[0];
-    if(question.author !== user._id) return res.status(401).send('Error: user is not the author of the question.')
+    if (question.author !== user._id) return res.status(401).send('Error: user is not the author of the question.')
     var index = course.questions.indexOf(question._id);
     course.questions.splice(index, 1);
     await courses_db.insert(course);
     await questions_db.destroy(question._id, question._rev);
-    
+
     res.status(200).send({ message: 'Question deleted.' });
 });
 
