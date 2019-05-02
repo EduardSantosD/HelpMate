@@ -28,11 +28,15 @@ function validate_answer(answer){
     const schema = {
         content: Joi.string().trim().required(),
         author: Joi.string().trim().required(),
+        id: Joi.string().trim().required(),
+        anonymous: Joi.boolean().required(),
+        question: Joi.string().trim().required(),
         creation_date: Joi.date(),
         correct: Joi.boolean(),
         comments: Joi.array().items(Joi.string().trim()),
         no_comments: Joi.boolean(),
-        approved: Joi.number().min(0)
+        approved: Joi.number().min(0),
+        instructor: Joi.boolean().required()
     }
     return Joi.validate(answer, schema, {convert: false});
 }
@@ -42,6 +46,7 @@ function validate_question(question){
         title: Joi.string().trim().required(),
         content: Joi.string().required(),
         author: Joi.string().trim().required(),
+        anonymous: Joi.boolean().required(),
         id: Joi.string().trim().required(),
         creation_date: Joi.date().timestamp().required(),
         solved: Joi.boolean().required(),
@@ -51,7 +56,9 @@ function validate_question(question){
         no_answers: Joi.boolean().required().required(),
         views: Joi.number().min(0).required(),
         approved: Joi.number().min(0).required(),
-        course: Joi.string().trim()
+        approved_users: Joi.array().items(Joi.string().trim()),
+        course: Joi.string().trim(),
+        instructor: Joi.boolean().required()
     }
     return Joi.validate(question, schema, {convert: false});
 }
@@ -125,3 +132,4 @@ exports.validate_course = validate_course;
 exports.validate_enroll = validate_enroll;
 exports.validate_pending_admin = validate_pending_admin;
 exports.validate_question = validate_question;
+exports.validate_answers = validate_answer;

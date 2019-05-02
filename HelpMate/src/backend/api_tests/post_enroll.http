@@ -1,4 +1,4 @@
-POST http://127.0.0.1:3000/api/enroll HTTP/1.1
+POST http://127.0.0.1:3000/api/courses/enroll HTTP/1.1
 Content-Type: application/json
 # Professor token
 # x-auth-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI4OGNjNzcwYzJjOGQ0NGMzZjQxM2FiZGUyOWYyYmJlNyIsImlhdCI6MTU1NjU5OTkwNn0.2vhq8qxjxHlzOyhPzA1KcdUNNaR-feTwJ8fmIhcJNFA
