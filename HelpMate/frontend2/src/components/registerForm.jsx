@@ -16,7 +16,7 @@ class RegisterForm extends Form {
       team: "",
       isGymLeader: ""
     },
-    genders: [{ _id: "Male", name: "Male" }, { _id: "Female", name: "Female" }],
+    genders: [{ _id: "Male", name: "male" }, { _id: "Female", name: "female" }],
     isGymLeader: [{ _id: true, name: "True" }, { _id: false, name: "False" }],
     types: [],
     teams: [],
@@ -24,26 +24,19 @@ class RegisterForm extends Form {
   };
 
   schema = {
-    username: Joi.string()
-      .required()
-      .label("Username"),
-    password: Joi.string()
-      .min(5)
-      .required()
-      .label("Password"),
-    birthday: Joi.date()
-      .required()
-      .label("Birthday"),
-    gender: Joi.string()
-      .required()
-      .label("Gender"),
-    team: Joi.string()
-      .required()
-      .label("Team"),
-    isGymLeader: Joi.boolean()
-      .required()
-      .label("Gym leader")
-  };
+    email: Joi.string().email().required(),
+    password: Joi.string().trim().required(),
+    first_name: Joi.string().trim().required(),
+    middle_name: Joi.string().trim().allow(''),
+    last_name: Joi.string().trim().required(),
+    age: Joi.number().min(1).required(),
+    gender: Joi.string().regex(/^male|female|other^/).required(),
+    questions: Joi.array().items(Joi.string().trim()),
+    major: Joi.string().trim().required(),
+    semester: Joi.number().integer().min(1).required(),
+    admin_courses: Joi.array().items(Joi.string().trim()),
+    courses: Joi.array().items(Joi.string().trim())
+  }
 
   async populateTeams() {
     let { data: teams } = await teamService.getTeams();
@@ -75,16 +68,14 @@ class RegisterForm extends Form {
       <div>
         <h1>Register</h1>
         <form onSubmit={this.handleSubmit}>
-          {this.renderInput("username", "Username")}
+          {this.renderInput("Email", "Email")}
           {this.renderInput("password", "Password", "password")}
-          {this.renderInput("birthday", "Birthday", "date")}
-          {this.renderSelect("team", "Team", this.state.teams)}
+          {this.renderInput("First Name", "Name")}
+          {this.renderInput("Last Name", "Last Name")}
+          {this.renderInput("Age", "Age", "number")}
           {this.renderSelect("gender", "Gender", this.state.genders)}
-          {this.renderSelect(
-            "isGymLeader",
-            "Gym leader",
-            this.state.isGymLeader
-          )}
+          {this.renderInput("Major", "Major")}
+          {this.renderInput("Semester", "Semester", "number")}
           {this.renderButton("Register")}
         </form>
       </div>

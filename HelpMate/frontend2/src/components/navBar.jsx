@@ -29,14 +29,14 @@ const NavBar = ({ user }) => {
           </NavLink>
         </React.Fragment>
       )}
-      <form class="form-inline mt-2 mt-md-0 ml-2">
+      <form className="form-inline mt-2 mt-md-0 ml-2">
         <input
-          class="form-control mr-sm-2"
+          className="form-control mr-sm-2"
           type="text"
           placeholder="Search"
           aria-label="Search"
         />
-        <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">
+        <button className="btn btn-outline-primary my-2 my-sm-0" type="submit">
           Search
         </button>
       </form>

@@ -86,19 +86,21 @@ router.post('/register/student', async(req, res) =>{
 });
 
 router.post('/login', async(req, res) =>{
+    console.log("entreee")
     const { error } = validate_login(req.body);
+    console.log("pase 1");
     if(error) return res.status(400).send(error.details[0].message);
-
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
+    console.log("pase 2");
 
     const query_response = await users_db.find({ selector: { email: { "$eq": req.body.email } } } );
     if (!query_response.docs[0]) return res.status(404).send('Error: incorrect username or password.');
-
+    console.log("pase 3");
     const user = query_response.docs[0];
     const valid = await bcrypt.compare(req.body.password, user.password);
     if(!valid) return res.status(400).send('Error: incorrect username or password.');
-
+    console.log("pase 4");
     const token = await jwt.sign({_id: user._id}, process.env.SECRET);
     user.jwt = token;
     ['_id', '_rev', 'password'].forEach(value => delete user[value]);
