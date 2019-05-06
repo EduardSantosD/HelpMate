@@ -36,6 +36,7 @@ function validate_answer(answer){
         comments: Joi.array().items(Joi.string().trim()),
         no_comments: Joi.boolean(),
         approved: Joi.number().min(0),
+        approved_users: Joi.array().items(Joi.string().trim()),
         instructor: Joi.boolean().required()
     }
     return Joi.validate(answer, schema, {convert: false});
@@ -132,4 +133,4 @@ exports.validate_course = validate_course;
 exports.validate_enroll = validate_enroll;
 exports.validate_pending_admin = validate_pending_admin;
 exports.validate_question = validate_question;
-exports.validate_answers = validate_answer;
+exports.validate_answer = validate_answer;

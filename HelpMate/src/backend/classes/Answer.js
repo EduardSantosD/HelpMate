@@ -13,6 +13,7 @@ class Answer{
         this.comments = new Array();                // [Array] Array of comments ids that have been posted to the answer.
         this.no_comments = true;                    // [Boolean] Tells if no one has commented this answer.
         this.approved = 0;                          // [Number] Counter of people that approve this as a correct answer.
+        this.approved_users = new Array();          // Array of users that have approved this question. A user should be able to use this once.
         this.instructor = instructor;               // [Boolean] Tell if the answer has been posted by the instructor. 
     }
 }
