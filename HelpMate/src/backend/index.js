@@ -36,5 +36,5 @@ app.use('/courses', courses_router);
 app.use('/api', api_router);
 app.use('/', root_router);
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`Escuchando en puerto ${port}...`));

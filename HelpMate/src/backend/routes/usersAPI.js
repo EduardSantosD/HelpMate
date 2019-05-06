@@ -100,8 +100,10 @@ router.post('/login', async(req, res) =>{
     if(!valid) return res.status(400).send('Error: incorrect username or password.');
 
     const token = await jwt.sign({_id: user._id}, process.env.SECRET);
+    user.jwt = token;
+    ['_id', '_rev', 'password'].forEach(value => delete user[value]);
 
-    res.status(200).send( { xauthtoken: token } );
+    res.status(200).send(user);
 });
 
 router.get('/courses', auth, async (req, res) => {
