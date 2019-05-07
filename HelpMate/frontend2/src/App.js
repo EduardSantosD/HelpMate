@@ -9,6 +9,7 @@ import PokeDeck from "./components/pokeDeck";
 import PokeList from "./components/pokeList";
 import PokeView from "./components/pokeView";
 import NotFound from "./components/notFound";
+import Home from "./components/home";
 import auth from "./services/authService";
 import "./App.css";
 
@@ -32,6 +33,7 @@ class App extends Component {
             <ProtectedRoute path="/pokemon/:number" component={PokeView} />
             <Route path="/pokemon" component={PokeList} />
             <Route path="/not-found" component={NotFound} />
+            <Route path="/home" component={Home} />
             <Route path="/" component={PokeDeck} exact />
             <Redirect to="/not-found" />
           </Switch>

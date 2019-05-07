@@ -55,8 +55,7 @@ class RegisterForm extends Form {
     try {
       console.log("registrando: ", this.state.data)
       const { data: response } = await trainerService.register(this.state.data);
-      setTimeout(() => { auth.login(this.state.data.email, this.state.data.password);}, 10000)
-      // auth.login(this.state.data.email, this.state.data.password);
+      await auth.login(this.state.data.email, this.state.data.password);
       window.location = "/";
     } catch (ex) {
       if (ex.response && ex.response.status === 400) {
