@@ -142,7 +142,7 @@ router.get('/pending_admins', auth, async (req, res) => {
     res.status(200).send(courses);
 });
 
-router.get('/courses/:course', auth, async (req, res) => {
+router.get('/:course', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
