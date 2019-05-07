@@ -11,14 +11,14 @@ class RegisterForm extends Form {
     data: {
       email: "",
       password: "",
-      firstName: "",
+      first_name: "",
       gender: "",
-      lastName: "",
+      last_name: "",
       age: 0,
       major : "",
       semester :0
     },
-    genders: [{ _id: "Male", name: "male" }, { _id: "Female", name: "female" }],
+    genders: [{ _id: "male", name: "Male" }, { _id: "female", name: "Female" }],
     isGymLeader: [{ _id: true, name: "True" }, { _id: false, name: "False" }],
     types: [],
     teams: [],
@@ -55,7 +55,8 @@ class RegisterForm extends Form {
     try {
       console.log("registrando: ", this.state.data)
       const { data: response } = await trainerService.register(this.state.data);
-      //auth.loginWithJwt(response.token);
+      setTimeout(() => { auth.login(this.state.data.email, this.state.data.password);}, 10000)
+      // auth.login(this.state.data.email, this.state.data.password);
       window.location = "/";
     } catch (ex) {
       if (ex.response && ex.response.status === 400) {
@@ -73,8 +74,8 @@ class RegisterForm extends Form {
         <form onSubmit={this.handleSubmit}>
           {this.renderInput("email", "Email")}
           {this.renderInput("password", "Password", "password")}
-          {this.renderInput("firstName", "First Name")}
-          {this.renderInput("lastName", "Last Name")}
+          {this.renderInput("first_name", "First Name")}
+          {this.renderInput("last_name", "Last Name")}
           {this.renderInput("age", "Age", "number")}
           {this.renderSelect("gender", "Gender", this.state.genders)}
           {this.renderInput("major", "Major")}

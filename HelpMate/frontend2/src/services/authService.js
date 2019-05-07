@@ -13,7 +13,7 @@ async function login(email, password) {
 }
 
 function loginWithJwt(jwt) {
-  localStorage.setItem(tokenKey, jwt);
+  localStorage.setItem(tokenKey, JSON.stringify(jwt));
 }
 
 function logout() {
