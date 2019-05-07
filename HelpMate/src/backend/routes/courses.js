@@ -192,6 +192,50 @@ router.get('/:course', auth, async (req, res) => {
     res.status(200).send([course, questions]);
 });
 
+router.get('/:course/users', auth, async (req, res) => {
+    const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
+    const users_db = await cloudant.db.use('users');
+    const courses_db = await cloudant.use('courses');
+
+    var query_response = await courses_db.find({
+        selector: {
+            key: { "$eq": req.params.course },
+            "$or": [
+                { users: { "$elemMatch": { "$eq": req.user } } },
+                { admins: { "$elemMatch": { "$eq": req.user } } }
+            ]
+        }, fields: ["users", "admins"]
+    });
+    if (!query_response.docs[0]) return res.status(400).send('Error: user is not enrolled in this course');
+    const course = query_response.docs[0];
+    var users = course.users;
+    var admins = course.admins;
+
+    for (let i = 0; i < users.length; i++) {
+        users[i] = { _id: { "$eq": users[i] } };
+    }
+    for (let i = 0; i < admins.length; i++) {
+        admins[i] = { _id: { "$eq": admins[i] } };
+    }
+
+    query_response = await users_db.find({
+        selector: {
+            "$or": users
+        }, fields: ["first_name", "middle_name", "last_name", "email"]
+    });
+    users = query_response.docs;
+
+    query_response = await users_db.find({
+        selector: {
+            "$or": admins
+        }, fields: ["first_name", "middle_name", "last_name", "email"]
+    });
+    admins = query_response.docs;
+
+    res.status(200).send([admins, users]);
+});
+
+
 router.get('/:course/pending_admins', auth, async (req, res) => {
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
