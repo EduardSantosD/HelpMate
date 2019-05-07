@@ -16,6 +16,7 @@ class App extends Component {
   state = {};
   componentDidMount() {
     const user = auth.getCurrentUser();
+    console.log("tthis" , (user))
     this.setState({ user });
   }
   render() {

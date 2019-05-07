@@ -104,7 +104,7 @@ router.post('/login', async(req, res) =>{
     const token = await jwt.sign({_id: user._id}, process.env.SECRET);
     user.jwt = token;
     ['_id', '_rev', 'password'].forEach(value => delete user[value]);
-
+    console.log(user)
     res.status(200).send(user);
 });
 

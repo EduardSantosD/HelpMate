@@ -7,8 +7,9 @@ const tokenKey = "token";
 http.setJwt(getJwt());
 
 async function login(email, password) {
-  const { data: jwt } = await http.post(apiEndpoint, { email, password });
-  localStorage.setItem(tokenKey, jwt);
+  const { data: user } = await http.post(apiEndpoint, { email, password });
+  console.log(tokenKey, user)
+  localStorage.setItem(tokenKey, JSON.stringify(user));
 }
 
 function loginWithJwt(jwt) {
@@ -22,7 +23,9 @@ function logout() {
 function getCurrentUser() {
   try {
     const jwt = localStorage.getItem(tokenKey);
-    return jwtDecode(jwt);
+    console.log("storaged: ", (jwt))
+    //return jwtDecode(jwt);
+    return JSON.parse(jwt)
   } catch (ex) {
     return null;
   }

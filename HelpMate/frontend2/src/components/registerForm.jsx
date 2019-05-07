@@ -1,7 +1,7 @@
 import React from "react";
 import Joi from "joi-browser";
 import Form from "./common/form";
-import trainerService from "../services/trainerService";
+import trainerService from "../services/register";
 import teamService from "../services/teamService";
 import auth from "../services/authService";
 import _ from "lodash";
@@ -9,12 +9,14 @@ import _ from "lodash";
 class RegisterForm extends Form {
   state = {
     data: {
-      username: "",
+      email: "",
       password: "",
-      birthday: "",
+      firstName: "",
       gender: "",
-      team: "",
-      isGymLeader: ""
+      lastName: "",
+      age: 0,
+      major : "",
+      semester :0
     },
     genders: [{ _id: "Male", name: "male" }, { _id: "Female", name: "female" }],
     isGymLeader: [{ _id: true, name: "True" }, { _id: false, name: "False" }],
@@ -51,8 +53,9 @@ class RegisterForm extends Form {
 
   doSubmit = async () => {
     try {
+      console.log("registrando: ", this.state.data)
       const { data: response } = await trainerService.register(this.state.data);
-      auth.loginWithJwt(response.token);
+      //auth.loginWithJwt(response.token);
       window.location = "/";
     } catch (ex) {
       if (ex.response && ex.response.status === 400) {
@@ -68,14 +71,14 @@ class RegisterForm extends Form {
       <div>
         <h1>Register</h1>
         <form onSubmit={this.handleSubmit}>
-          {this.renderInput("Email", "Email")}
+          {this.renderInput("email", "Email")}
           {this.renderInput("password", "Password", "password")}
-          {this.renderInput("First Name", "Name")}
-          {this.renderInput("Last Name", "Last Name")}
-          {this.renderInput("Age", "Age", "number")}
+          {this.renderInput("firstName", "First Name")}
+          {this.renderInput("lastName", "Last Name")}
+          {this.renderInput("age", "Age", "number")}
           {this.renderSelect("gender", "Gender", this.state.genders)}
-          {this.renderInput("Major", "Major")}
-          {this.renderInput("Semester", "Semester", "number")}
+          {this.renderInput("major", "Major")}
+          {this.renderInput("semester", "Semester", "number")}
           {this.renderButton("Register")}
         </form>
       </div>
