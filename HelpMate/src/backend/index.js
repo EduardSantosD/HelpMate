@@ -1,11 +1,6 @@
 // import configuration of enviroment
 require('dotenv').config();
 
-// React imports
-const react = require('react');
-const reactDOM = require('react-dom');
-const reactEngine = require('express-react-views').createEngine();
-
 // Express imports
 const express = require('express');
 const app = express();
@@ -21,11 +16,6 @@ const api_router = require('./routes/usersAPI');
 // Express app configuration
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
-
-// Set up view engine
-app.set('views', __dirname + '/views');
-app.set('view engine', 'jsx');
-app.engine('jsx', reactEngine);
 
 // Routes redirects
 app.use(express.json());
