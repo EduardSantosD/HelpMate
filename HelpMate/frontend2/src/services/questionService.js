@@ -17,6 +17,26 @@ async function getQuestion(user, question_id, course_id) {
     return question
 }
 
+async function setQuestion(user, title, content, tags, anonymous, course_id) {
+    console.log(user)
+    const { data: question } = await http.post("api/" + apiEndpoint + course_id + '/new_question', {
+        title,content, tags, anonymous
+    }, { headers: { 'x-auth-token': user } });
+    console.log("question read:", question)
+    return question
+}
+
+async function setAnswer(content, anonymous, user, course_id, question_id) {
+    console.log(user)
+    const { data: question } = await http.post("api/" + "/courses/" + course_id +  "/q/" + question_id + "/new_answer", {
+        content, anonymous
+    }, { headers: { 'x-auth-token': user } });
+    console.log("answer read:", question)
+    return question
+}
+
 export default {
-    getQuestion
+    getQuestion,
+    setQuestion,
+    setAnswer
 };

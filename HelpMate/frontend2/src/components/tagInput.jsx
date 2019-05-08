@@ -41,7 +41,7 @@ class TagInput extends Component {
         return (
             <div>
                 <div className="col-sm-50">
-                    <input type="text" onChangeCapture={this.getBadged.bind(this)} className="form-control" id="tags" placeholder="Tags" />
+                    <input type="text" onChange={this.getBadged.bind(this)} className="form-control" id="tags" placeholder="Tags" />
                 </div>
                 <div id="tagContainer">
                 </div>

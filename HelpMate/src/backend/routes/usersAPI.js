@@ -635,11 +635,12 @@ router.post('/courses/:course/pending_admins', auth, async (req, res) => {
 });
 
 router.post('/courses/:course/new_question', auth, async (req, res) => {
+    console.log("//////////////////////////")
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
     const questions_db = await cloudant.use('questions');
-
+    console.log(req.body)
     var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
     if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
 
@@ -660,6 +661,7 @@ router.post('/courses/:course/new_question', auth, async (req, res) => {
     var instructor = false;
     if(course.admins.includes(user._id)) instructor = true;
     var question = new Question(req.body.title, req.body.content, user._id, req.body.anonymous, req.body.tags, course._id, instructor);
+    console.log(question)
 
     const { error } = validate_question(question);
     if (error) return res.status(400).send(error.details[0].message);

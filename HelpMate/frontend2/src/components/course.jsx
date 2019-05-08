@@ -62,7 +62,7 @@ class Course extends Component {
                     term={this.state.course_info.term}
                     year={this.state.course_info.year}
                 />
-                <IOForm title="How to Ask" message="Fill the next fields correctly and be polite!"
+                <IOForm course_id={this.state.course_info.key} title="How to Ask" message="Fill the next fields correctly and be polite!"
                     image={"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/VisualEditor_-_Icon_-_Help.svg/1024px-VisualEditor_-_Icon_-_Help.svg.png"}
                 />
                 <QuestionBoard questions= {this.state.course_questions} course_key = {this.state.course_id} />

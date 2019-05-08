@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, NavLink } from "react-router-dom";
+import "./common/courseCard.css"
 
 const formatDate = (date) => {
     var monthNames = [
@@ -28,7 +28,7 @@ const QuestionCard = ({ title, date, solved, tags, views, key, course_key, quest
     return (
         <div className="card col-md-10 ml-5 m-3">
             <div className="row d-flex justify-content-center">
-                <h3> <a href={"/question/" +  course_key + "/q/" + question_key}> {title} </a></h3>
+                <h3 className="titleCards"> <a href={"/question/" +  course_key + "/q/" + question_key}> {title} </a></h3>
             </div>
             <div className="row d-flex justify-content-center m-1">
                 <span className="">{formatDate(new Date(date))}</span>

@@ -71,7 +71,7 @@ class Question extends Component {
                     tags = {this.state.question_info.tags}/>
 
 
-                <IOForm title="How to Answer" message="Be sure about your answer, do not forget to vote!"
+                <IOForm question_id={this.state.question_info.id} title="How to Answer" message="Be sure about your answer, do not forget to vote!"
                     image="https://www.daylong.co.uk/info/content/uploads/2017/11/qa.png" answer={true} />
                 
                 <AnswersBoard answers={this.state.answers} />
