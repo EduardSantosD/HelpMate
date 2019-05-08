@@ -20,8 +20,8 @@ async function getCourses(user) {
 }
 
 async function getCourse(course_id, token) {
-    console.log("course:", course_id, token)
-    const { data: course } = await http.get(apiEndpoint + course_id, { headers: { 'x-auth-token': token } });
+    console.log("course only:", course_id, token)
+    const { data: course } = await http.get("api/" + apiEndpoint + course_id, { headers: { 'x-auth-token': token } });
     return course
 }
 
