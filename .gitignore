@@ -1,4 +1,4 @@
-/HelpMate/node_modules
-/HelpMate/api_tests
-/HelpMate/.env
-/HelpMate/package-lock.json
+/.env
+/package-lock.json
+/api_tests
+/node_modules
