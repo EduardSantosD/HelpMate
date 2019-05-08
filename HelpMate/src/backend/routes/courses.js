@@ -280,16 +280,12 @@ router.get('/:course/q/:question', auth, async (req, res) => {
     const questions_db = await cloudant.use('questions');
     const answers_db = await cloudant.use('answers');
 
-    var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
-    if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
-    const user = query_response.docs[0];
-
     query_response = await courses_db.find({
         selector: {
             key: { "$eq": req.params.course },
             "$or": [
-                { users: { "$elemMatch": { "$eq": user._id } } },
-                { admins: { "$elemMatch": { "$eq": user._id } } }
+                { users: { "$elemMatch": { "$eq": req.user } } },
+                { admins: { "$elemMatch": { "$eq": req.user } } }
             ]
         },
         fields: ["_id", "key"]
@@ -329,16 +325,41 @@ router.get('/:course/q/:question', auth, async (req, res) => {
     for (let i = 0; i < answers_ids.length; i++) {
         answers_ids[i] = { "_id": { "$eq": answers_ids[i] } }
     }
-    query_response = answers_db.find({
+    sleep(300);
+    query_response = await answers_db.find({
         selector: {
-            question: question._id,
+            question: { "$eq": question._id },
             "$or": answers_ids
         },
-        fields: ["id", "content", "author", "anonymous", "creation_date", "correct", "comments", "no_comments", "approved"]
+        fields: ["id", "content", "author", "anonymous", "instructor", "creation_date", "correct", "comments", "no_comments", "approved"]
     });
     var answers = query_response.docs;
     if (!answers) answers = new Array();
-    ['answers', '_id', '_rev', 'answers', 'course'].forEach(value => delete question[value]);
+
+    var temp_users = new Array();
+    for (let i = 0; i < answers.length; i++) {
+        temp_users[i] = { "_id": { "$eq": answers[i].author } }
+    }
+    query_response = await users_db.find({
+        selector: {
+            "$or": temp_users
+        }, fields: ["_id", "first_name", "last_name"]
+    });
+    temp_users = query_response.docs;
+    for (let i = 0; i < answers.length; i++) {
+        if (!answers[i].anonymous) {
+            var index = temp_users.findIndex(student => student._id === answers[i].author);
+            answers[i].author = temp_users[index].first_name + ' ' + temp_users[index].last_name;
+        } else {
+            answers[i].author = 'anonymous';
+        }
+    }
+
+    ['answers', '_id', '_rev', 'answers', 'course', 'approved_users'].forEach(value => delete question[value]);
+
+    answers.sort((a, b) => {
+        return new Date(b.creation_date) - new Date(a.creation_date)
+    });
 
     res.status(200).send([question, answers])
 });
