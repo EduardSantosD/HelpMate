@@ -20,7 +20,8 @@ class QuestionBoard extends Component {
                         {
                             this.props.questions.slice(0, Math.floor(this.props.questions.length/2)).map(question =>
                                 <QuestionCard key={question.id} title={question.title} date={question.creation_date} 
-                                solved={question.solved} tags={question.tags} views={question.views} />
+                                solved={question.solved} tags={question.tags} views={question.views} course_key = {this.props.course_key}
+                                question_key={question.id} />
                             )
                         }
                         </div>
@@ -28,7 +29,8 @@ class QuestionBoard extends Component {
                             {
                             this.props.questions.slice(Math.floor(this.props.questions.length / 2), this.props.questions.length).map(question =>
                                 <QuestionCard key={question.id} title={question.title} date={question.creation_date} 
-                                solved={question.solved} tags={question.tags} views={question.views} />
+                                solved={question.solved} tags={question.tags} views={question.views} course_key = {this.props.course_key}
+                                question_key={question.id} />
                             )
                         }
                         </div>

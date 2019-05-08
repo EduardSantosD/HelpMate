@@ -11,6 +11,7 @@ import PokeView from "./components/pokeView";
 import NotFound from "./components/notFound";
 import Home from "./components/home";
 import Course from "./components/course";
+import Question from "./components/question";
 import auth from "./services/authService";
 import "./App.css";
 
@@ -36,6 +37,7 @@ class App extends Component {
             <Route path="/not-found" component={NotFound} />
             <Route path="/home" component={Home} />
             <Route path="/courses/" component={Course} />
+            <Route path="/question/:course_key/q/:question_key" component={Question} />
             <Route path="/" component={PokeDeck} exact />
             <Redirect to="/not-found" />
           </Switch>

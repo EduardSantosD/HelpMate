@@ -1,4 +1,5 @@
 import React from "react";
+import { Link, NavLink } from "react-router-dom";
 
 const formatDate = (date) => {
     var monthNames = [
@@ -23,11 +24,11 @@ const solvedFun = (solved) => {
 }
 
 
-const QuestionCard = ({ title, date, solved, tags, views }) => {
+const QuestionCard = ({ title, date, solved, tags, views, key, course_key, question_key }) => {
     return (
         <div className="card col-md-10 ml-5 m-3">
             <div className="row d-flex justify-content-center">
-                <h3>{title}</h3>
+                <h3> <a href={"/question/" +  course_key + "/q/" + question_key}> {title} </a></h3>
             </div>
             <div className="row d-flex justify-content-center m-1">
                 <span className="">{formatDate(new Date(date))}</span>
@@ -39,7 +40,7 @@ const QuestionCard = ({ title, date, solved, tags, views }) => {
                 <span className="">{tags}</span>
                 <span className="p-1"></span>
                 <span>Views: </span>
-                <span className=" badge badge-primary badge-pill mt-1">{views}</span>
+                <span className=" badge badge-primary badge-pill mt-1 ml-1">{views}</span>
             </div>
         </div>
     );

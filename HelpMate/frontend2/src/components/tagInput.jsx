@@ -7,10 +7,13 @@ class TagInput extends Component {
 
     randomClassColor(){
         let arr = [
-            "badge badge-warning",
-            "badge badge-danger",
-            "badge badge-success",
-            "badge badge-pill indigo"
+            "badge badge-pill badge-primary",
+            "badge badge-pill badge-secondary",
+            "badge badge-pill badge-success",
+            "badge badge-pill badge-danger",
+            "badge badge-pill badge-warning",
+            "badge badge-pill badge-info",
+            "badge badge-pill badge-dark"
         ]
         let r = Math.floor((Math.random() * arr.length));
         return arr[r]
