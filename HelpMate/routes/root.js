@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', (req, res) =>{
-    res.render('index');
+    res.status(200).send('Welcome to the HelpMate API');
 })
 
 module.exports = router;
