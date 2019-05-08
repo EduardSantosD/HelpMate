@@ -10,6 +10,7 @@ import PokeList from "./components/pokeList";
 import PokeView from "./components/pokeView";
 import NotFound from "./components/notFound";
 import Home from "./components/home";
+import Course from "./components/course";
 import auth from "./services/authService";
 import "./App.css";
 
@@ -34,6 +35,7 @@ class App extends Component {
             <Route path="/pokemon" component={PokeList} />
             <Route path="/not-found" component={NotFound} />
             <Route path="/home" component={Home} />
+            <Route path="/courses/" component={Course} />
             <Route path="/" component={PokeDeck} exact />
             <Redirect to="/not-found" />
           </Switch>

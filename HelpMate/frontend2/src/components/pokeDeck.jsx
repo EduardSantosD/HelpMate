@@ -1,8 +1,11 @@
 import React from "react";
 import Carousel from "./common/carousel.jsx";
 import Footer from "./common/footer";
+import { Redirect } from "react-router-dom";
+import auth from "../services/authService";
 
 const PokeDeck = () => {
+  if (auth.getCurrentUser()) return <Redirect to="/home" />;
   // const cards = [
   //   {
   //     path: "/pokemon",
