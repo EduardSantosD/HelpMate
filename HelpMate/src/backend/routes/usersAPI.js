@@ -419,6 +419,7 @@ router.get('/courses/:course/q/:question', auth, async (req, res) => {
 });
 
 router.post('/courses/new_course', auth, async (req, res) => {
+    console.log("creando...")
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -428,10 +429,11 @@ router.post('/courses/new_course', auth, async (req, res) => {
 
     const user = query_response.docs[0];
     if (!user.department) return res.status(401).send('Error: this user is not authorized to create new courses');
-
+    console.log("bodu:", req.body)
     var course = new Course(req.body.name, req.body.id, req.body.tags, req.body.term, req.body.year);
     course.admins.push(user._id);
 
+    console.log("pass 1")
     const { error } = validate_course(course);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -443,6 +445,7 @@ router.post('/courses/new_course', auth, async (req, res) => {
             admins: { "$elemMatch": { "$eq": user._id } }
         }
     });
+    console.log("pass 2")
     if (query_response.docs[0]) return res.status(400).send('Error: user has already defined a course with the specified name, term and year');
 
     query_response = await courses_db.find({
@@ -451,6 +454,7 @@ router.post('/courses/new_course', auth, async (req, res) => {
             admins: { "$elemMatch": { "$eq": user._id } }
         }
     });
+    console.log("pass 3")
     // Avoid key collision
     if (query_response.docs[0]) course.key = nanoid(16);
 
@@ -458,6 +462,7 @@ router.post('/courses/new_course', auth, async (req, res) => {
     query_response = await courses_db.find({ selector: { name: { "$eq": course.name }, admins: { "$elemMatch": { "$eq": user._id } } } });
     course = query_response.docs[0];
 
+    console.log("pass 4")
     user.admin_courses.push(course._id);
     await users_db.insert(user);
 

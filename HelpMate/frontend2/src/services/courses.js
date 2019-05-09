@@ -25,7 +25,17 @@ async function getCourse(course_id, token) {
     return course
 }
 
+async function createCourse(user, data) {
+    data.tags = data.tags.split(',');
+    data.year = parseInt(data.year)
+    console.log(data)
+    const { data: question } = await http.post("api/courses/new_course",  data, { headers: { 'x-auth-token': user } });
+    console.log("creatted course:", question)
+    return question
+}
+
 export default {
     getCourses,
-    getCourse
+    getCourse,
+    createCourse
 };

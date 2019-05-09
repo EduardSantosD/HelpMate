@@ -29,6 +29,11 @@ const NavBar = ({ user }) => {
           </NavLink>
         </React.Fragment>
       )}
+      {user && !user.semester && (
+        <NavLink className="nav-item nav-link" to="/create_course">
+          Create Course
+        </NavLink>
+      )}
       <form className="form-inline mt-2 mt-md-0 ml-2">
         <input
           className="form-control mr-sm-2"

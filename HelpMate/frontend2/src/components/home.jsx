@@ -62,7 +62,7 @@ class Home extends Component {
                 <div>
                     <h3>Student Courses </h3>
                     {
-                        this.state.courses_array.courses.map(course =>
+                        this.state.courses_array.courses && this.state.courses_array.courses.map(course =>
                             <CourseCard key={course.name} title={course.name} description={course.term.toUpperCase() + ' ' + course.year} area={course.id}
                                 path={"/courses/"+course.key} image="http://fundacioncarlosslim.org/wp-content/uploads/2017/12/microcontroladores_.jpg" />
                         )

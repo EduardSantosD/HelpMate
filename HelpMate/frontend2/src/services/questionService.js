@@ -28,7 +28,7 @@ async function setQuestion(user, title, content, tags, anonymous, course_id) {
 
 async function setAnswer(content, anonymous, user, course_id, question_id) {
     console.log(user)
-    const { data: question } = await http.post("api/" + "/courses/" + course_id +  "/q/" + question_id + "/new_answer", {
+    const { data: question } = await http.post("api/courses/" + course_id +  "/q/" + question_id + "/new_answer", {
         content, anonymous
     }, { headers: { 'x-auth-token': user } });
     console.log("answer read:", question)

@@ -2,7 +2,6 @@ import React from "react";
 import Joi from "joi-browser";
 import Form from "./common/form";
 import trainerService from "../services/register";
-import teamService from "../services/teamService";
 import auth from "../services/authService";
 import _ from "lodash";
 
@@ -40,17 +39,6 @@ class RegisterForm extends Form {
     courses: Joi.array().items(Joi.string().trim())
   }
 
-  async populateTeams() {
-    let { data: teams } = await teamService.getTeams();
-    teams = teams.sort();
-    teams = teams.map(team => ({ _id: team, name: _.capitalize(team) }));
-    this.setState({ teams });
-  }
-
-  async componentDidMount() {
-    await this.populateTeams();
-  }
-
   doSubmit = async () => {
     try {
       console.log("registrando: ", this.state.data)
@@ -69,6 +57,10 @@ class RegisterForm extends Form {
   render() {
     return (
       <div>
+        <div className="row bg-light">
+          <a href="/register" className="col">STUDENT</a>
+          <a href="/registerprofessor" className="col">PROFESSOR</a>
+        </div>
         <h1>Register</h1>
         <form onSubmit={this.handleSubmit}>
           {this.renderInput("email", "Email")}

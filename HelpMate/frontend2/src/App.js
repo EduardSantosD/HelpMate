@@ -4,14 +4,14 @@ import ProtectedRoute from "./components/common/protectedRoute";
 import LoginForm from "./components/loginForm";
 import Logout from "./components/logout";
 import RegisterForm from "./components/registerForm";
+import RegisterFormProfessor from "./components/registerFormProfessor";
 import NavBar from "./components/navBar";
 import PokeDeck from "./components/pokeDeck";
-import PokeList from "./components/pokeList";
-import PokeView from "./components/pokeView";
 import NotFound from "./components/notFound";
 import Home from "./components/home";
 import Course from "./components/course";
 import Question from "./components/question";
+import CreateCourse from "./components/createCourse"
 import auth from "./services/authService";
 import "./App.css";
 
@@ -32,10 +32,10 @@ class App extends Component {
             <Route path="/login" component={LoginForm} />
             <Route path="/logout" component={Logout} />
             <Route path="/register" component={RegisterForm} />
-            <ProtectedRoute path="/pokemon/:number" component={PokeView} />
-            <Route path="/pokemon" component={PokeList} />
+            <Route path="/registerprofessor" component={RegisterFormProfessor} />
             <Route path="/not-found" component={NotFound} />
             <Route path="/home" component={Home} />
+            <Route path="/create_course" component={CreateCourse} />
             <Route path="/courses/" component={Course} />
             <Route path="/question/:course_key/q/:question_key" component={Question} />
             <Route path="/" component={PokeDeck} exact />
