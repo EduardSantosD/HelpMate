@@ -10,6 +10,7 @@ const reactEngine = require('express-react-views').createEngine();
 const express = require('express');
 const app = express();
 const path = require('path');
+const cors = require('cors');
 
 // Express router imports
 const root_router = require('./routes/root');
@@ -21,7 +22,7 @@ const api_router = require('./routes/usersAPI');
 // Express app configuration
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
-
+app.use(cors());
 // Set up view engine
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jsx');

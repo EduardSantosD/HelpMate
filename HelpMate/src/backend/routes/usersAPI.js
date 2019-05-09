@@ -86,23 +86,25 @@ router.post('/register/student', async(req, res) =>{
 });
 
 router.post('/login', async(req, res) =>{
+    console.log("entreee")
     const { error } = validate_login(req.body);
+    console.log("pase 1");
     if(error) return res.status(400).send(error.details[0].message);
-
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
+    console.log("pase 2");
 
     const query_response = await users_db.find({ selector: { email: { "$eq": req.body.email } } } );
     if (!query_response.docs[0]) return res.status(404).send('Error: incorrect username or password.');
-
+    console.log("pase 3");
     const user = query_response.docs[0];
     const valid = await bcrypt.compare(req.body.password, user.password);
     if(!valid) return res.status(400).send('Error: incorrect username or password.');
-
+    console.log("pase 4");
     const token = await jwt.sign({_id: user._id}, process.env.SECRET);
     user.jwt = token;
     ['_id', '_rev', 'password'].forEach(value => delete user[value]);
-
+    console.log(user)
     res.status(200).send(user);
 });
 
@@ -417,6 +419,7 @@ router.get('/courses/:course/q/:question', auth, async (req, res) => {
 });
 
 router.post('/courses/new_course', auth, async (req, res) => {
+    console.log("creando...")
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
@@ -426,10 +429,11 @@ router.post('/courses/new_course', auth, async (req, res) => {
 
     const user = query_response.docs[0];
     if (!user.department) return res.status(401).send('Error: this user is not authorized to create new courses');
-
+    console.log("bodu:", req.body)
     var course = new Course(req.body.name, req.body.id, req.body.tags, req.body.term, req.body.year);
     course.admins.push(user._id);
 
+    console.log("pass 1")
     const { error } = validate_course(course);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -441,6 +445,7 @@ router.post('/courses/new_course', auth, async (req, res) => {
             admins: { "$elemMatch": { "$eq": user._id } }
         }
     });
+    console.log("pass 2")
     if (query_response.docs[0]) return res.status(400).send('Error: user has already defined a course with the specified name, term and year');
 
     query_response = await courses_db.find({
@@ -449,6 +454,7 @@ router.post('/courses/new_course', auth, async (req, res) => {
             admins: { "$elemMatch": { "$eq": user._id } }
         }
     });
+    console.log("pass 3")
     // Avoid key collision
     if (query_response.docs[0]) course.key = nanoid(16);
 
@@ -456,6 +462,7 @@ router.post('/courses/new_course', auth, async (req, res) => {
     query_response = await courses_db.find({ selector: { name: { "$eq": course.name }, admins: { "$elemMatch": { "$eq": user._id } } } });
     course = query_response.docs[0];
 
+    console.log("pass 4")
     user.admin_courses.push(course._id);
     await users_db.insert(user);
 
@@ -633,11 +640,12 @@ router.post('/courses/:course/pending_admins', auth, async (req, res) => {
 });
 
 router.post('/courses/:course/new_question', auth, async (req, res) => {
+    console.log("//////////////////////////")
     const cloudant = await Cloudant({ url: process.env.cloudant_url + ':' + process.env.cloudant_port });
     const users_db = await cloudant.db.use('users');
     const courses_db = await cloudant.use('courses');
     const questions_db = await cloudant.use('questions');
-
+    console.log(req.body)
     var query_response = await users_db.find({ selector: { _id: { "$eq": req.user } } });
     if (!query_response.docs[0]) return res.status(400).send('Error: incorrect username.');
 
@@ -658,6 +666,7 @@ router.post('/courses/:course/new_question', auth, async (req, res) => {
     var instructor = false;
     if(course.admins.includes(user._id)) instructor = true;
     var question = new Question(req.body.title, req.body.content, user._id, req.body.anonymous, req.body.tags, course._id, instructor);
+    console.log(question)
 
     const { error } = validate_question(question);
     if (error) return res.status(400).send(error.details[0].message);

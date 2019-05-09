@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.card-deck {
+  margin-bottom: 20px;
+}
+
+.cartas {
+  height: 96px;
+}

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 
 module.exports = function (req, res, next) {
     const token = req.headers['x-auth-token'];
+    console.log(token)
     if (!token) return res.status(401).send('Request must include x-auth-token.');
 
     try {
